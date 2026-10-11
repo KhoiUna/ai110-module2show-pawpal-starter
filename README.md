@@ -42,6 +42,24 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+## Implementation Summary
+
+The core logic lives in `pawpal_system.py` (class diagram: `diagrams/uml.mmd`). It has four classes and two enums:
+
+- **`Task`** (dataclass): one care activity on one day, with a title, category, start time, duration, `Priority` (low/medium/high), `Frequency` (once/daily/weekly), due date, and completion status. It can compute its end time, check whether it overlaps another task, and mark itself complete. If it repeats, completing it returns the next occurrence.
+- **`Pet`** (dataclass): a pet's details (name, species, age, special needs) and its own list of tasks. `add_task()` tags each task with the pet's name so it can be traced back later.
+- **`Owner`** (dataclass): the owner's name, daily time budget (`available_minutes`), preferences, and pets. `get_all_tasks()` returns every pet's tasks as one list.
+- **`Scheduler`**: the "brain". It takes an `Owner` and reads tasks only through `owner.get_all_tasks()`, so one plan covers all pets.
+
+**How they work together:** an `Owner` has many `Pet`s, and each `Pet` has many `Task`s. `Scheduler.build_daily_plan(day)` follows four steps:
+
+1. It gathers every task due that day across all pets.
+2. It keeps the highest-priority tasks that fit in the owner's available minutes and records the rest in `scheduler.skipped`.
+3. It returns the kept tasks sorted by start time.
+4. `explain_plan()` turns the plan into readable text that lists time-overlap conflicts and skipped tasks. `complete_task()` marks a task done and adds the next occurrence of a daily or weekly task to the same pet.
+
+Run `python main.py` for a terminal demo and `pytest` for the tests.
+
 ## 🖥️ Sample Output
 
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
