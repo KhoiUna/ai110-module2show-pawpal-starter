@@ -39,12 +39,22 @@
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+
+  I used Claude Code at every step, one step at a time. It turned my core user actions into a Mermaid UML diagram, created class stubs, and wrote the scheduling logic, the `main.py` demo, the tests, and the docs.
+
 - What kinds of prompts or questions were most helpful?
+
+  Specific prompts that named the file and the exact behavior worked best, such as "Scheduler must read from the Owner method, not a single pet." Asking for one step at a time kept each change small enough to review.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
+
+  While implementing, the AI added things that weren't in my UML (`Task.pet_name`, `Scheduler.complete_task()`, `Scheduler.skipped`). It also kept the name `title` even though my brief said `description`. Before keeping these changes, I checked that each one had a real reason, for example that filtering by pet needs `pet_name`, and I made sure the UML was updated to match the code.
+
 - How did you evaluate or verify what the AI suggested?
+
+  I didn't rely on the AI's explanations alone. I checked that the UML parses with Mermaid, ran `main.py` to see the real schedule, and ran `pytest`. The first `pytest` run failed with `ModuleNotFoundError`, which showed that a `pytest.ini` was needed so plain `pytest` works.
 
 ---
 
