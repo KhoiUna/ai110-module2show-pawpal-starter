@@ -50,13 +50,16 @@ class Task:
     pet_name: str = ""  # set by Pet.add_task so tasks can be traced back to their pet
 
     def __post_init__(self) -> None:
+        """Reject tasks with a zero or negative duration."""
         if self.duration_minutes <= 0:
             raise ValueError("duration_minutes must be positive")
 
     def _start_datetime(self) -> datetime:
+        """Return the full date and time this task starts."""
         return datetime.combine(self.due_date, self.start_time)
 
     def _end_datetime(self) -> datetime:
+        """Return the full date and time this task ends."""
         return self._start_datetime() + timedelta(minutes=self.duration_minutes)
 
     def end_time(self) -> time:
@@ -150,6 +153,7 @@ class Scheduler:
     """Builds and explains a daily care plan for an owner's pets."""
 
     def __init__(self, owner: Owner) -> None:
+        """Create a scheduler that plans for the given owner's pets."""
         self.owner = owner
         # tasks left out by the last fit_to_available_time call
         self.skipped: list[Task] = []
@@ -183,11 +187,7 @@ class Scheduler:
         ]
 
     def fit_to_available_time(self, tasks: list[Task]) -> list[Task]:
-        """Return the tasks that fit within the owner's available minutes.
-
-        Tasks are considered highest priority first; any task that would push the
-        total over budget is skipped and recorded in self.skipped.
-        """
+        """Keep the highest-priority tasks that fit the owner's minutes; record the rest in self.skipped."""
         budget = self.owner.available_minutes
         used = 0
         kept: list[Task] = []
