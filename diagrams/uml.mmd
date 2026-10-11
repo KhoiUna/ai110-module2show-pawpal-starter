@@ -1,15 +1,75 @@
 classDiagram
-    %% Replace the placeholders below with your actual classes, attributes, methods, and relationships.
+    %% PawPal+ class design, based on the three core user actions:
+    %%   1. Add a pet            -> Owner.add_pet(), Pet
+    %%   2. Schedule a care task -> Pet.add_task(), Task
+    %%   3. View today's plan    -> Scheduler.build_daily_plan(), detect_conflicts(), Task.mark_complete()
     %% Keep this file updated so it matches your final implementation.
 
-    class ClassName {
-        +type attribute
-        +method() returnType
+    class Owner {
+        +str name
+        +int available_minutes
+        +list~str~ preferences
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +remove_pet(pet_name: str) bool
+        +get_pet(pet_name: str) Optional~Pet~
+        +get_all_tasks() list~Task~
     }
 
-    class AnotherClass {
-        +type attribute
-        +method() returnType
+    class Pet {
+        +str name
+        +str species
+        +int age
+        +list~str~ special_needs
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(title: str) bool
+        +get_tasks_for(day: date) list~Task~
     }
 
-    ClassName --> AnotherClass : relationship
+    class Task {
+        +str title
+        +str category
+        +time start_time
+        +int duration_minutes
+        +Priority priority
+        +Frequency frequency
+        +date due_date
+        +bool completed
+        +end_time() time
+        +overlaps(other: Task) bool
+        +is_due_on(day: date) bool
+        +mark_complete() Optional~Task~
+    }
+
+    class Scheduler {
+        +Owner owner
+        +build_daily_plan(day: date) list~Task~
+        +sort_by_time(tasks: list~Task~) list~Task~
+        +sort_by_priority(tasks: list~Task~) list~Task~
+        +filter_tasks(tasks: list~Task~, pet_name: str, completed: bool) list~Task~
+        +fit_to_available_time(tasks: list~Task~) list~Task~
+        +detect_conflicts(tasks: list~Task~) list~str~
+        +explain_plan(tasks: list~Task~) str
+    }
+
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    class Frequency {
+        <<enumeration>>
+        ONCE
+        DAILY
+        WEEKLY
+    }
+
+    Owner "1" o-- "0..*" Pet : owns
+    Pet "1" *-- "0..*" Task : has
+    Scheduler "1" --> "1" Owner : plans for
+    Scheduler ..> Task : sorts, filters, checks conflicts
+    Task --> Priority : uses
+    Task --> Frequency : uses
