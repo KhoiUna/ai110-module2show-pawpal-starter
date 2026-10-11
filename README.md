@@ -70,7 +70,17 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+====================================================================== test session starts ======================================================================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /home/khoi/Desktop/ai110-module2show-pawpal-starter
+configfile: pytest.ini
+testpaths: tests
+plugins: anyio-4.15.1
+collected 2 items
+
+tests/test_pawpal.py ..                                                                                                                                   [100%]
+
+======================================================================= 2 passed in 0.01s =======================================================================
 ```
 
 ## 📐 Smarter Scheduling
