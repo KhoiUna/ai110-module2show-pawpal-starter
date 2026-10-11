@@ -2,7 +2,7 @@ classDiagram
     %% PawPal+ class design, based on the three core user actions:
     %%   1. Add a pet            -> Owner.add_pet(), Pet
     %%   2. Schedule a care task -> Pet.add_task(), Task
-    %%   3. View today's plan    -> Scheduler.build_daily_plan(), detect_conflicts(), Task.mark_complete()
+    %%   3. View today's plan    -> Scheduler.build_daily_plan(), detect_conflicts(), Scheduler.complete_task()
     %% Keep this file updated so it matches your final implementation.
 
     class Owner {
@@ -36,6 +36,7 @@ classDiagram
         +Frequency frequency
         +date due_date
         +bool completed
+        +str pet_name
         +end_time() time
         +overlaps(other: Task) bool
         +is_due_on(day: date) bool
@@ -44,12 +45,14 @@ classDiagram
 
     class Scheduler {
         +Owner owner
+        +list~Task~ skipped
         +build_daily_plan(day: date) list~Task~
         +sort_by_time(tasks: list~Task~) list~Task~
         +sort_by_priority(tasks: list~Task~) list~Task~
-        +filter_tasks(tasks: list~Task~, pet_name: str, completed: bool) list~Task~
+        +filter_tasks(tasks: list~Task~, pet_name: Optional~str~, completed: Optional~bool~) list~Task~
         +fit_to_available_time(tasks: list~Task~) list~Task~
         +detect_conflicts(tasks: list~Task~) list~str~
+        +complete_task(task: Task) Optional~Task~
         +explain_plan(tasks: list~Task~) str
     }
 
