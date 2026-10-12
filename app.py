@@ -48,10 +48,19 @@ if "owner" not in st.session_state:
     st.session_state.owner = Owner(name="Khoi", available_minutes=90)
 
 owner = st.session_state.owner
-owner.name = st.text_input("Owner name", value=owner.name)
+
+# Seed the widgets once from the Owner, then let their keys hold the value.
+# Passing value=owner.<field> instead would change the widget's identity on
+# every edit and make it jump back and forth.
+if "owner_name" not in st.session_state:
+    st.session_state.owner_name = owner.name
+if "available_minutes" not in st.session_state:
+    st.session_state.available_minutes = owner.available_minutes
+
+owner.name = st.text_input("Owner name", key="owner_name")
 owner.available_minutes = int(
     st.number_input("Minutes available today", min_value=1,
-                    max_value=1440, value=owner.available_minutes)
+                    max_value=1440, key="available_minutes")
 )
 
 st.markdown("### Add a Pet")
