@@ -77,13 +77,18 @@ class Task:
         """Return True if this task should appear on the given day."""
         return self.due_date == day
 
-    def mark_complete(self) -> Optional[Task]:
+    def mark_complete(self, completed_on: Optional[date] = None) -> Optional[Task]:
         """Mark this task done; return the next occurrence if it recurs, else None."""
+        if self.completed:
+            return None  # already done; don't create a duplicate next occurrence
         self.completed = True
         step = RECURRENCE_STEP.get(self.frequency)
         if step is None:
             return None
-        return replace(self, due_date=self.due_date + step, completed=False)
+        # Count from the later of the due date and the completion day, so a late
+        # task's next occurrence lands after today and an early one isn't duplicated.
+        base = max(self.due_date, completed_on or date.today())
+        return replace(self, due_date=base + step, completed=False)
 
 
 @dataclass
@@ -212,9 +217,9 @@ class Scheduler:
                     )
         return warnings
 
-    def complete_task(self, task: Task) -> Optional[Task]:
+    def complete_task(self, task: Task, completed_on: Optional[date] = None) -> Optional[Task]:
         """Mark a task done and add its next occurrence (if any) to the same pet."""
-        next_task = task.mark_complete()
+        next_task = task.mark_complete(completed_on)
         if next_task is not None:
             pet = self.owner.get_pet(task.pet_name)
             if pet is not None:

@@ -40,7 +40,7 @@ classDiagram
         +end_time() time
         +overlaps(other: Task) bool
         +is_due_on(day: date) bool
-        +mark_complete() Optional~Task~
+        +mark_complete(completed_on: Optional~date~) Optional~Task~
     }
 
     class Scheduler {
@@ -52,7 +52,7 @@ classDiagram
         +filter_tasks(tasks: list~Task~, pet_name: Optional~str~, completed: Optional~bool~) list~Task~
         +fit_to_available_time(tasks: list~Task~) list~Task~
         +detect_conflicts(tasks: list~Task~) list~str~
-        +complete_task(task: Task) Optional~Task~
+        +complete_task(task: Task, completed_on: Optional~date~) Optional~Task~
         +explain_plan(tasks: list~Task~) str
     }
 
