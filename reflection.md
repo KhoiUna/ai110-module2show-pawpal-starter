@@ -30,7 +30,12 @@
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+
+  `fit_to_available_time()` fills the owner's time budget greedily, going through tasks from highest priority to lowest. It keeps each task that still fits and skips any that would go over. It doesn't search for the combination that uses the most minutes. For example, with 40 minutes free, it keeps a 35-minute high-priority task and skips two 20-minute medium tasks, even though those two would fill the full 40 minutes.
+
 - Why is that tradeoff reasonable for this scenario?
+
+  For pet care, the most important tasks (meds, feeding) should always come first, even if that leaves a few minutes unused. The greedy approach is also simple, fast, and easy to explain, and the plan lists every skipped task so the owner knows what was dropped.
 
 ---
 

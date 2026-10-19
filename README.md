@@ -78,28 +78,31 @@ Plan for Jordan: 5 task(s), 80 of 90 available minutes.
 ## 🧪 Testing PawPal+
 
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
 
-Sample test output:
+The suite (`tests/test_pawpal.py`, 14 tests) covers:
+
+- **Basics:** marking a task complete, adding tasks to a pet.
+- **Sorting:** tasks come back in chronological order (earlier days first, higher priority first on time ties), and the daily plan is time-ordered.
+- **Recurrence:** completing a daily/weekly task creates the next occurrence (next day / next week) on the same pet; one-time tasks don't recur; late tasks recur from today; completing twice doesn't duplicate.
+- **Conflict detection:** same-time tasks are flagged for the same pet and across pets; back-to-back and different-day tasks are not; every overlapping pair is reported.
 
 ```
-====================================================================== test session starts ======================================================================
+============================= test session starts ==============================
 platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/khoi/Desktop/ai110-module2show-pawpal-starter
 configfile: pytest.ini
 testpaths: tests
 plugins: anyio-4.15.1
-collected 2 items
+collected 14 items
 
-tests/test_pawpal.py ..                                                                                                                                   [100%]
+tests/test_pawpal.py ..............                                      [100%]
 
-======================================================================= 2 passed in 0.01s =======================================================================
+============================== 14 passed in 0.01s ==============================
 ```
+
+**Confidence Level:** ★★★★☆ (4/5): all core scheduling behaviors are tested and pass, including edge cases. The Streamlit UI and time-budget skipping (`fit_to_available_time`) aren't directly tested yet.
 
 ## 📐 Smarter Scheduling
 
