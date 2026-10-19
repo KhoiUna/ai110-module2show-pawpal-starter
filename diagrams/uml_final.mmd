@@ -1,0 +1,86 @@
+classDiagram
+    %% PawPal+ final class design: matches pawpal_system.py as built.
+    %% Core user actions:
+    %%   1. Add a pet            -> Owner.add_pet(), Pet
+    %%   2. Schedule a care task -> Pet.add_task(), Task
+    %%   3. View today's plan    -> Scheduler.build_daily_plan(), detect_conflicts(), complete_task()
+
+    class Owner {
+        +str name
+        +int available_minutes
+        +list~str~ preferences
+        +list~Pet~ pets
+        +add_pet(pet: Pet) None
+        +remove_pet(pet_name: str) bool
+        +get_pet(pet_name: str) Optional~Pet~
+        +get_all_tasks() list~Task~
+    }
+
+    class Pet {
+        +str name
+        +str species
+        +int age
+        +list~str~ special_needs
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(title: str) bool
+        +get_tasks_for(day: date) list~Task~
+    }
+
+    class Task {
+        +str title
+        +str category
+        +time start_time
+        +int duration_minutes
+        +Priority priority
+        +Frequency frequency
+        +date due_date
+        +bool completed
+        +str pet_name
+        -_start_datetime() datetime
+        -_end_datetime() datetime
+        +end_time() time
+        +overlaps(other: Task) bool
+        +is_due_on(day: date) bool
+        +mark_complete(completed_on: Optional~date~) Optional~Task~
+    }
+
+    class Scheduler {
+        +Owner owner
+        +list~Task~ skipped
+        +build_daily_plan(day: date) list~Task~
+        +sort_by_time(tasks: list~Task~) list~Task~
+        +sort_by_priority(tasks: list~Task~) list~Task~
+        +filter_tasks(tasks: list~Task~, pet_name: Optional~str~, completed: Optional~bool~) list~Task~
+        +fit_to_available_time(tasks: list~Task~) list~Task~
+        +detect_conflicts(tasks: list~Task~) list~str~
+        +complete_task(task: Task, completed_on: Optional~date~) Optional~Task~
+        +explain_plan(tasks: list~Task~) str
+    }
+
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    class Frequency {
+        <<enumeration>>
+        ONCE
+        DAILY
+        WEEKLY
+    }
+
+    Owner "1" o-- "0..*" Pet : owns
+    Pet "1" *-- "0..*" Task : has
+    Scheduler "1" --> "1" Owner : plans for
+    Scheduler "1" --> "0..*" Task : skipped
+    Scheduler ..> Task : sorts, filters, checks conflicts
+    Scheduler ..> Pet : adds next occurrence
+    Task ..> Task : mark_complete() creates next occurrence
+    Task --> Priority : uses
+    Task --> Frequency : uses
+
+    note for Task "pet_name is set by Pet.add_task() and links a task back to its pet by name.\nNext due date = max(due_date, completed_on) + RECURRENCE_STEP[frequency]\n(DAILY: timedelta(days=1), WEEKLY: timedelta(weeks=1); ONCE: no next occurrence)."
+    note for Scheduler "All tasks come from Owner.get_all_tasks(), so one plan covers every pet.\nConflicts are returned as warning strings and never raise."
