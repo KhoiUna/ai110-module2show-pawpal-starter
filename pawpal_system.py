@@ -206,15 +206,19 @@ class Scheduler:
         return kept
 
     def detect_conflicts(self, tasks: list[Task]) -> list[str]:
-        """Return a warning message for each pair of overlapping tasks."""
+        """Return a warning message for each pair of overlapping tasks (never raises)."""
         ordered = self.sort_by_time(tasks)
         warnings = []
         for i, first in enumerate(ordered):
             for second in ordered[i + 1:]:
-                if first.overlaps(second):
-                    warnings.append(
-                        f"Conflict: {_describe(first)} overlaps {_describe(second)}"
-                    )
+                # Sorted by start, so once a task starts after `first` ends, none later overlap it.
+                if second._start_datetime() >= first._end_datetime():
+                    break
+                scope = ("same pet" if first.pet_name == second.pet_name
+                         else "different pets")
+                warnings.append(
+                    f"Conflict ({scope}): {_describe(first)} overlaps {_describe(second)}"
+                )
         return warnings
 
     def complete_task(self, task: Task, completed_on: Optional[date] = None) -> Optional[Task]:

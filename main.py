@@ -18,7 +18,7 @@ def print_tasks(heading: str, tasks: list[Task]) -> None:
 
 
 def main() -> None:
-    owner = Owner(name="Jordan", available_minutes=90)
+    owner = Owner(name="Jordan", available_minutes=120)
 
     mochi = Pet(name="Mochi", species="dog", age=3)
     luna = Pet(name="Luna", species="cat", age=5,
@@ -37,6 +37,13 @@ def main() -> None:
                         Priority.HIGH, Frequency.DAILY))
     luna.add_task(Task("Breakfast", "feeding", time(8, 0), 10,
                        Priority.HIGH, Frequency.DAILY))
+
+    # Two deliberate clashes for the conflict check:
+    # different pets at 08:00 (both breakfasts), same pet at 08:15 (Luna).
+    mochi.add_task(Task("Breakfast", "feeding", time(8, 0), 10,
+                        Priority.HIGH, Frequency.DAILY))
+    luna.add_task(Task("Ear drops", "medication", time(8, 15), 5,
+                       Priority.MEDIUM))
 
     scheduler = Scheduler(owner)
     all_tasks = owner.get_all_tasks()
@@ -65,6 +72,12 @@ def main() -> None:
                                            completed=False)))
 
     plan = scheduler.build_daily_plan(date.today())
+
+    print("\nConflict check")
+    print("--------------")
+    for warning in scheduler.detect_conflicts(plan) or ["No conflicts found."]:
+        print(f"  {warning}")
+
     print(f"\nToday's Schedule ({date.today():%A, %B %d})")
     print("=" * 40)
     print(scheduler.explain_plan(plan))
