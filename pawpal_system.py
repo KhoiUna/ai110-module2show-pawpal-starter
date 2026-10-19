@@ -248,8 +248,8 @@ class Scheduler:
         warnings = []
         for i, first in enumerate(ordered):
             for second in ordered[i + 1:]:
-                # Sorted by start, so once a task starts after `first` ends, none later overlap it.
-                if second._start_datetime() >= first._end_datetime():
+                # Sorted by start, so the first non-overlapping task means none later overlap either.
+                if not first.overlaps(second):
                     break
                 scope = ("same pet" if first.pet_name == second.pet_name
                          else "different pets")

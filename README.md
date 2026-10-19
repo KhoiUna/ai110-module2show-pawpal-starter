@@ -106,14 +106,23 @@ tests/test_pawpal.py ..............                                      [100%]
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+All scheduling logic lives in the `Scheduler` and `Task` classes in `pawpal_system.py`. Run `python main.py` to see each feature print in the terminal.
 
-| Feature           | Method(s) | Notes                             |
-| ----------------- | --------- | --------------------------------- |
-| Task sorting      |           | e.g., by priority, duration       |
-| Filtering         |           | e.g., skip tasks if time runs out |
-| Conflict handling |           | e.g., overlapping time slots      |
-| Recurring tasks   |           | e.g., daily vs. weekly            |
+| Feature           | Method(s)                                                   | Notes                                                                                   |
+| ----------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Task sorting      | `Scheduler.sort_by_time()`, `Scheduler.sort_by_priority()`  | By date, then start time (high priority first on ties); or by priority, then time        |
+| Filtering         | `Scheduler.filter_tasks()`                                  | By pet name, completion status, or both                                                 |
+| Time budget       | `Scheduler.fit_to_available_time()`                         | Keeps the highest-priority tasks that fit the owner's minutes; the rest go in `skipped` |
+| Conflict handling | `Scheduler.detect_conflicts()`, `Task.overlaps()`           | Flags overlapping time slots for the same pet or different pets, as warnings            |
+| Recurring tasks   | `Task.mark_complete()`, `Scheduler.complete_task()`         | Daily tasks come back the next day and weekly tasks a week later                        |
+
+**Sorting.** `sort_by_time()` calls `sorted()` with a lambda key of `(due_date, start_time, -priority)`. Tasks added in any order come out in clock order, and when two tasks start at the same time the higher priority one comes first. `sort_by_priority()` flips the order: highest priority first, then earliest time.
+
+**Filtering.** `filter_tasks(tasks, pet_name=None, completed=None)` keeps only the tasks that match. Both filters are optional and can be combined. For example, `filter_tasks(tasks, pet_name="Mochi", completed=False)` returns Mochi's unfinished tasks.
+
+**Conflict detection.** `detect_conflicts()` sorts tasks by start time and compares each one with the tasks after it, stopping as soon as a later task starts after the current one ends. It returns warning strings such as `Conflict (same pet): 'Thyroid pill' (Luna, 08:15-08:20) overlaps 'Ear drops' (Luna, 08:15-08:20)` and never raises an error, so the plan is still built. Back-to-back tasks and tasks on different days are not conflicts. The Streamlit app shows each warning with `st.warning`.
+
+**Recurring tasks.** `Task.mark_complete()` marks a task done. For a daily or weekly task, it returns a new copy due `timedelta(days=1)` or `timedelta(weeks=1)` later. The new date counts from the later of the due date and today, so a task completed late still comes back tomorrow. `Scheduler.complete_task()` adds that new copy to the same pet. Completing the same task twice does not create a duplicate.
 
 ## 📸 Demo Walkthrough
 
