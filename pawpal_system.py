@@ -78,7 +78,13 @@ class Task:
         return self.due_date == day
 
     def mark_complete(self, completed_on: Optional[date] = None) -> Optional[Task]:
-        """Mark this task done; return the next occurrence if it recurs, else None."""
+        """Mark this task done; return the next occurrence if it recurs, else None.
+
+        A DAILY or WEEKLY task returns a copy with completed=False, due one step
+        (timedelta(days=1) or timedelta(weeks=1)) after the later of its due date and
+        completed_on (default: today). Completing an already-completed task returns
+        None, so no duplicate occurrence is created.
+        """
         if self.completed:
             return None  # already done; don't create a duplicate next occurrence
         self.completed = True
@@ -164,17 +170,31 @@ class Scheduler:
         self.skipped: list[Task] = []
 
     def build_daily_plan(self, day: date) -> list[Task]:
-        """Return the tasks due on the given day that fit the owner's time, in time order."""
+        """Return the tasks due on the given day that fit the owner's time, in time order.
+
+        Gathers tasks from every pet via Owner.get_all_tasks(), keeps those due on
+        `day`, trims them to the time budget with fit_to_available_time(), then sorts
+        the result with sort_by_time().
+        """
         due_today = [task for task in self.owner.get_all_tasks()
                      if task.is_due_on(day)]
         return self.sort_by_time(self.fit_to_available_time(due_today))
 
     def sort_by_time(self, tasks: list[Task]) -> list[Task]:
-        """Return tasks sorted by start time (higher priority first on ties)."""
+        """Return tasks sorted by start time (higher priority first on ties).
+
+        Uses sorted() with a lambda key of (due_date, start_time, -priority), so
+        tasks on earlier days come first and equal start times put HIGH before LOW.
+        The input list is not modified.
+        """
         return sorted(tasks, key=lambda t: (t.due_date, t.start_time, -t.priority.value))
 
     def sort_by_priority(self, tasks: list[Task]) -> list[Task]:
-        """Return tasks sorted from highest to lowest priority (earlier first on ties)."""
+        """Return tasks sorted from highest to lowest priority (earlier first on ties).
+
+        Uses a lambda key of (-priority, due_date, start_time). The input list is
+        not modified.
+        """
         return sorted(tasks, key=lambda t: (-t.priority.value, t.due_date, t.start_time))
 
     def filter_tasks(
@@ -183,7 +203,12 @@ class Scheduler:
         pet_name: Optional[str] = None,
         completed: Optional[bool] = None,
     ) -> list[Task]:
-        """Return tasks matching the given pet name and completion status (None = any)."""
+        """Return tasks matching the given pet name and completion status (None = any).
+
+        Both filters are optional and combine with AND, e.g.
+        filter_tasks(tasks, pet_name="Mochi", completed=False) returns Mochi's
+        unfinished tasks. Original order is preserved.
+        """
         return [
             task
             for task in tasks
@@ -192,7 +217,12 @@ class Scheduler:
         ]
 
     def fit_to_available_time(self, tasks: list[Task]) -> list[Task]:
-        """Keep the highest-priority tasks that fit the owner's minutes; record the rest in self.skipped."""
+        """Keep the highest-priority tasks that fit the owner's minutes; record the rest in self.skipped.
+
+        Greedy: walks tasks from highest to lowest priority and keeps each one whose
+        duration still fits in Owner.available_minutes. It does not search for the
+        combination that uses the most minutes. self.skipped is reset on every call.
+        """
         budget = self.owner.available_minutes
         used = 0
         kept: list[Task] = []
@@ -206,7 +236,14 @@ class Scheduler:
         return kept
 
     def detect_conflicts(self, tasks: list[Task]) -> list[str]:
-        """Return a warning message for each pair of overlapping tasks (never raises)."""
+        """Return a warning message for each pair of overlapping tasks (never raises).
+
+        Sorts by start time, then compares each task only with the tasks after it,
+        stopping once a later task starts at or after the current one ends. Tasks
+        that only touch (one ends as the next starts) or fall on different days do
+        not conflict. Each message says whether the clash is for the same pet or
+        different pets.
+        """
         ordered = self.sort_by_time(tasks)
         warnings = []
         for i, first in enumerate(ordered):
@@ -222,7 +259,12 @@ class Scheduler:
         return warnings
 
     def complete_task(self, task: Task, completed_on: Optional[date] = None) -> Optional[Task]:
-        """Mark a task done and add its next occurrence (if any) to the same pet."""
+        """Mark a task done and add its next occurrence (if any) to the same pet.
+
+        Calls Task.mark_complete(completed_on) and, for DAILY or WEEKLY tasks,
+        appends the returned occurrence to the pet found via task.pet_name. Returns
+        that new task, or None for one-time or already-completed tasks.
+        """
         next_task = task.mark_complete(completed_on)
         if next_task is not None:
             pet = self.owner.get_pet(task.pet_name)
